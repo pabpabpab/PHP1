@@ -1,12 +1,5 @@
 <?php
 
-$uploadDir = './gallery';
-if (!is_dir($uploadDir)) {
-    if (!mkdir($uploadDir, 0777)) {
-        exit('Не могу создать папку галлереи.');
-    }
-}
-
 function getUploadError($key) {
     $uploadErrors = [
         0 => 'Ошибок не возникло, файл был успешно загружен на сервер. ',
@@ -55,78 +48,43 @@ function myUpload($uploadDir, $userFile, $maxUploadSizeMb) {
     }
 
     if (empty($errors)) {
-        $destination = $uploadDir . "/" . uniqid('i') . "." . $fileExtension;
+        $imgName = uniqid('i') . "." . $fileExtension;
+        $destination = $uploadDir . "/" . $imgName;
         if (!move_uploaded_file($_FILES['userFile']['tmp_name'], $destination)) {
             $errors[] = "Возможная атака с помощью файловой загрузки!";
+        } else {
+            $imgFolder = (int) $uploadDir;
+            $imgWeight = $_FILES[$userFile]['size'];
+
+            GLOBAL $dbLink;
+            $sql = "INSERT INTO
+            gallery
+                (img_folder, name_of_small_img, name_of_big_img, weight_of_small_img, weight_of_big_img)
+            VALUES
+                ($imgFolder, '$imgName', '$imgName', $imgWeight, $imgWeight)";
+
+            mysqli_query($dbLink, $sql);
+            // mysqli_query($dbLink, $sql) or die(mysqli_error($dbLink));
         }
     }
 
     return $errors;
 }
 
-function is_image($file) {
-    if (!is_file($file)) {
-        return false;
+
+
+function readGalleryFromDatabase($dirname, $scriptName) {
+    GLOBAL $dbLink;
+    $sql = 'SELECT * FROM gallery ORDER BY number_of_viewings DESC';
+    $result = mysqli_query($dbLink, $sql);
+
+    $picturess = [];
+    while($row = mysqli_fetch_assoc($result)) {
+       $pictures[] = "<a href='{$scriptName}?show_big_img=1&img_id={$row['id']}' target='_blank'><img src='./{$dirname}/{$row['name_of_small_img']}' class='small_img'></a>";
+
     }
-    $allowed = ['gif' => 1, 'jpg' => 2, 'png' => 3, 'bmp' => 6];
-    $imageType = getimagesize($file)[2];
-    if (in_array($imageType, $allowed)) {
-        return true;
-    }
-    return false;
+    return implode('', $pictures);
 }
 
-
-if (!empty($_FILES)) {
-    $errors = myUpload($uploadDir, 'userFile', 10);
-    $errorsText = implode("<br>", $errors);
-}
-
-
-function readGallery($dirname) {
-    $files = [];
-    $scanned = scandir($dirname);
-    foreach ($scanned as $value) {
-        $file = "{$dirname}/{$value}";
-        if (is_image($file)) {
-            $files[] = "<a href='{$file}' target='_blank'><img src='{$file}' class='small_img'></a>";
-        }
-    }
-    return implode('', $files);
-}
 ?>
 
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset='utf-8'>
-    <style>
-        body {
-          font-size: 1rem;
-        }
-        .small_img {
-            width:100px;
-            margin:10px;
-        }
-    </style>
-    <title>Task 1</title>
-</head>
-<body>
-
-<div style="align:center;margin: 30px 0;">
-<?php echo $errorsText; ?>
-</div>
-
-<form enctype="multipart/form-data" action="upload-and-gallery.php" method="POST">
-    <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo 10 * 1024 * 1024; ?>" />
-    Отправить этот файл: <input name="userFile" type="file" />
-    <input type="submit" value="Отправить файл" />
-</form>
-
-<div style="display:flex;align-items:center;margin:30px 0;">
-    <?php echo readGallery($uploadDir); ?>
-</div>
-
-</body>
-</html>
