@@ -1,24 +1,17 @@
-
 <?php
+require_once __DIR__ . '/engine/lib.php';
 
-/*
-CREATE TABLE gallery ( id INT UNSIGNED NOT NULL AUTO_INCREMENT , img_folder INT UNSIGNED NOT NULL , name_of_small_img VARCHAR(30) NOT NULL , name_of_big_img VARCHAR(30) NOT NULL , weight_of_small_img INT UNSIGNED NOT NULL , weight_of_big_img INT UNSIGNED NOT NULL , number_of_viewings INT UNSIGNED NOT NULL DEFAULT '0', PRIMARY KEY (id), INDEX number_of_viewings (number_of_viewings)) ENGINE = InnoDB;
-*/
+$pages = include __DIR__ . '/config/pagesConfig.php';
+$page = getPage($pages);
 
+ob_start();
+    include __DIR__ . '/pages/' . $page;
+$content = ob_get_clean();
 
-$uploadDir = '1';
-if (!is_dir($uploadDir)) {
-    if (!mkdir($uploadDir, 0777)) {
-        exit('Не могу создать папку галлереи.');
-    }
-}
+$html = file_get_contents(__DIR__ . '/tmpl/main.html');
 
-
-
-if (!empty($_GET['show_big_img']) && ((int) $_GET['img_id'] > 0)) {
-   include('one_picture.php');
-} else {
-   include('catalog.php');
-}
-
-?>
+echo str_replace(
+    ['{{CONTENT}}'],
+    [$content],
+    $html
+);
