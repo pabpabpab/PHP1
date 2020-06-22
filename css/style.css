@@ -1,3 +1,93 @@
-* {
-    /*color: blue;*/
+.menu {
+	margin: 30px 0;
+}
+h1 {
+	margin: 30px 0;
+}
+h2 {
+	margin: 50px 0 20px 0;
+}
+.result {
+	font-size: 30px;
+	margin: 30px 0;
+}
+.form {
+	font-size: 30px;
+}
+.field {
+	font-size: 20px;
+	padding: 10px;
+}
+.hint {
+	font-size: 20px;
+	color: #777
+	margin: 20px 0 0 0;
+}
+.error {
+	font-size: 20px;
+	padding: 10px;
+	margin: 30px 0;
+}
+
+
+.product_one {
+	margin: 20px 0;
+}
+.product_img_div {
+	margin: 20px 0;
+	display: flex;
+	align-items: center;
+}
+.product_name {
+	margin: 20px 0;
+	font-size: 20px;
+}
+.product_price {
+	margin: 20px 0;
+	font-size: 20px;
+}
+.product_description {
+	margin: 20px 0;
+	font-size: 20px;
+}
+.comment {
+	font-size: 20px;
+	margin: 20px 0;
+}
+.comments {
+	font-size: 20px;
+	margin: 20px 0;
+}
+
+
+
+.small_img {
+	width: 200px;
+	margin: 10px;
+}
+.big_img {
+	width: 400px;
+	margin: 10px;
+}
+
+.catalog {
+	display: flex;
+	align-items: center;
+}
+.catalog_item {
+	margin: 10px;
+	padding: 10px;
+	border: 1px solid #cccccc;
+	text-align: center;
+}
+.catalog_name_link {
+	font-size: 15px;
+	color: #000;
+}
+.catalog_price {
+	font-size: 15px;
+}
+.delete_link {
+	font-size: 10px;
+	color: #000;
 }
