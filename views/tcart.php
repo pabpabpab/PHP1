@@ -41,13 +41,24 @@ phtml;
 
 $_SESSION['cart']['totalPrice'] = number_format($_SESSION['cart']['totalPrice'], 2, '.', '');
 
+
+$orderInvite = "<input type='submit' name='setOrder' value='Оформить заказ' class='order_submit'>";
+if (!$_SESSION['user']['authorized']) {
+    $orderInvite = "<div class='order_invite'>
+      <a href='/?p=login' class='private_menu_link'>Авторизуйтесь</a> 
+      чтобы оформить заказ.
+    </div>";
+}
+
+
 echo "<form method='post' action='/?p=cart&a=save'>
          <table class='cart'>" . implode('', $products) . "</table>
          <div class='totalPrice'>
             Итого: {$_SESSION['cart']['totalPrice']}&#8381;
          </div>
-         <div class='totalPrice'>
-           <input type='submit' value='Сохранить изменения' class='cart_submit'>
+         <div class='cart_bottom'>
+           {$orderInvite}
+           <input type='submit' name='saveChanges' value='Сохранить изменения' class='order_submit'>
          </div>
       </form>
       ";

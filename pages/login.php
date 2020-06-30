@@ -1,14 +1,9 @@
 <?php
 function indexAction() {
-    $error = '';
-    if (!empty($_GET['error'])) {
-    	$error = $_GET['error'];
-    }
-
     echo render('tlogin.php', [
         'title' => 'Авторизация',
         'h1' => 'Авторизация',
-        'error' => $error,
+        'msg' => getMSG(),
     ]);
 }
 
@@ -23,32 +18,38 @@ function authorizationAction() {
       $error .= 'Не указан пароль.<br>';
    }
    if (!empty($error)) {
-      header("Location: /?p=login&error={$error}");
-      exit;
+      setMSG($error);
+      redirect('/?p=login');
+      return;
    }
 
    $sql = "SELECT * FROM users WHERE email = '" . $_POST['email'] ."'";
    $result = mysqli_query(getLink(), $sql);
 
    if (mysqli_num_rows($result) == 0) {
-      $error = 'Неверно указан логин или пароль.';
-   	  header("Location: /?p=login&error={$error}");
-      exit;
+      setMSG('Неверно указан логин или пароль.');
+      redirect('/?p=login');
+      return;
    }
 
    $row = mysqli_fetch_assoc($result);
    if (!password_verify($_POST['password'], $row['password'])) {
-      $error = 'Неверно указан логин или пароль.';
-   	  header("Location: /?p=login&error={$error}");
-      exit;
+      setMSG('Неверно указан логин или пароль.');
+      redirect('/?p=login');
+      return;
    }
 
    $_SESSION['user']['authorized'] = true;
    $_SESSION['user']['id'] = $row['id'];
    $_SESSION['user']['name'] = $row['name'];
-   $_SESSION['user']['is_amin'] = $row['is_admin'];
+   $_SESSION['user']['is_admin'] = $row['is_admin'];
    $_SESSION['user']['number_of_products'] = $row['number_of_products'];
 
-   header("Location: /?p=personal_area");
-   exit;
+   if (isAdmin()) {
+       $_SESSION['user']['orders_count'] = userOrdersCounter();
+   } else {
+       $_SESSION['user']['orders_count'] = $row['number_of_orders'];
+   }
+
+   redirect('/?p=personal_area');
 }

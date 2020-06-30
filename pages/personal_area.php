@@ -1,35 +1,28 @@
 <?php
 function indexAction() {
-    $error = '';
-    if (!empty($_GET['error'])) {
-    	$error = $_GET['error'];
+    if (!$_SESSION['user']['authorized']) {
+        redirect(' /');
+        return;
     }
 
     echo render('tpersonal_area.php', [
         'title' => 'Личный кабинет',
         'h1' => 'Личный кабинет',
-        'error' => $error,
+        'msg' => getMSG(),
         'privateMenu' => getPrivateMenu(),
-        'privatePage' => ''
+        'privateContent' => ''
     ]);
 }
 
-
-function getPrivateMenu() {
-    return renderTmpl('tprivate_menu.php', [
-       'userName' => $_SESSION['user']['name'],
-       'userNumberOfProducts' => $_SESSION['user']['number_of_products'],
-    ]);
-}
 
 
 function myProductsAction() {
-    $error = '';
-    if (!empty($_GET['error'])) {
-        $error = $_GET['error'];
+    if (!isAdmin()) {
+        redirect('');
+        return;
     }
 
-	$h2 = 'Мои товары';
+    $h2 = 'Мои товары';
 
 	$result = getProducts($_SESSION['user']['id']);
 
@@ -39,7 +32,7 @@ function myProductsAction() {
        'result' => $result,
     ]);
 
-    $privatePage = renderTmpl('tprivate_page.php', [
+    $privateContent = renderTmpl('tprivate_page.php', [
        'h2' => $h2,
        'html' => $productsHtml,
     ]);
@@ -47,110 +40,57 @@ function myProductsAction() {
     echo render('tpersonal_area.php', [
         'title' => 'Личный кабинет / Мои товары',
         'h1' => 'Личный кабинет',
-        'error' => $error,
+        'msg' => getMSG(),
         'privateMenu' => getPrivateMenu(),
-        'privatePage' => $privatePage,
+        'privateContent' => $privateContent,
     ]);
 }
 
 
 
 function newProductAction() {
+    if (!isAdmin()) {
+        redirect('');
+        return;
+    }
+
     $h2 = 'Добавить товар';
 
     $formHtml = renderTmpl('tnew_product_form.php', []);
 
-    $privatePage = renderTmpl('tprivate_page.php', [
+    $privateContent = renderTmpl('tprivate_page.php', [
        'h2' => $h2,
        'html' => $formHtml,
     ]);
 
-
-    $error = '';
-    if (!empty($_GET['error'])) {
-        $error = $_GET['error'];
-    }
-
     echo render('tpersonal_area.php', [
         'title' => 'Личный кабинет / Добавить товар',
         'h1' => 'Личный кабинет',
-        'error' => $error,
+        'msg' => getMSG(),
         'privateMenu' => getPrivateMenu(),
-        'privatePage' => $privatePage,
+        'privateContent' => $privateContent,
     ]);
-}
-
-
-
-
-function deleteProductAction() {
-   include_once dirname(__DIR__) . '/engine/valid_data_functions.php';
-
-   $userId = getInt($_SESSION['user']['id']);
-
-   if ($userId == 0) {
-       header("Location: /?p=login");
-       exit;
-    }
-
-   $productId = getId();
-   $row = getOneProduct($productId);
-
-   if (empty($row['product_name'])) {
-      $error = "В базе нет товара с id = " . $productId;
-      header("Location: /?p=personal_area&a=myProducts&error={$error}");
-      exit;
-   }
-
-   if ($userId != $row['user_id']) {
-      $error = "У вас нет прав на удаление товара с id = " . $productId;
-      header("Location: /?p=personal_area&a=myProducts&error={$error}");
-      exit;
-   }
-
-   if (!empty($row['number_of_images'])) {
-      $imgPath = '.';
-      $imgFolder = $row['img_folder'];
-
-      $sql = "SELECT img_name_info FROM products_images WHERE product_id = " . $productId;
-      $result = mysqli_query(getLink(), $sql);
-      while ($row2 = mysqli_fetch_assoc($result)) {
-         $pictureFile = "{$imgPath}/{$imgFolder}/{$row2['img_name_info']}";
-         if (!unlink($pictureFile)) {
-            $error = "Не удалось удалить фото товара " . $pictureFile . ". Удаление отменено.";
-            header("Location: /?p=personal_area&a=myProducts&error={$error}");
-            exit;
-         }
-      }
-      $sql = "DELETE FROM products_images WHERE product_id = " . $productId;
-      mysqli_query(getLink(), $sql);
-   }
-
-   $sql = "DELETE FROM products WHERE id = " . $productId;
-   mysqli_query(getLink(), $sql);
-
-   header("Location: /?p=personal_area&a=myProducts");
-   exit;
 }
 
 
 
 
 function addProductAction() {
-    include_once dirname(__DIR__) . '/engine/valid_data_functions.php';
+    if (!isAdmin()) {
+        redirect('');
+        return;
+    }
 
     $userId = getInt($_SESSION['user']['id']);
 
     if ($userId == 0) {
-       header("Location: /?p=login");
-       exit;
+        redirect('/?p=login');
+        return;
     }
-
 
     $name = stripInjection($_POST['name']);
     $price = getNumeric($_POST['price']);
     $description = stripInjection($_POST['description']);
-
 
     $error = '';
     if (empty($name)) {
@@ -163,8 +103,9 @@ function addProductAction() {
         $error .= 'Не указано описание товара.<br>';
     }
     if (!empty($error)) {
-       header("Location: /?p=personal_area&a=newProduct&error={$error}");
-       exit;
+        setMSG($error);
+        redirect('/?p=personal_area&a=newProduct');
+        return;
     }
 
     $sql = "INSERT INTO
@@ -177,29 +118,30 @@ function addProductAction() {
 
 
     if (empty($product_id)) {
-       $error = 'Товар не добавился.';
-       header("Location: /?p=personal_area&a=newProduct&error={$error}");
-       exit;
+        setMSG('Товар не добавился.');
+        redirect('/?p=personal_area&a=newProduct');
+        return;
     }
+
+    $_SESSION['user']['number_of_products'] = setUserNumberOfProducts($userId);
 
     $htmlFormImgFieldName = 'userfile';
     if (!empty($_FILES[$htmlFormImgFieldName]['name'][0])) {
-       $maxImgWeightInMb = 10;
-       $imgFolder = 1;
-       $imgFolderPath = './';
-       checkFolder($imgFolderPath . $imgFolder);
+        $maxImgWeightInMb = 10;
+        $imgFolder = 1;
+        $imgFolderPath = './';
+        checkFolder($imgFolderPath . $imgFolder);
 
-       $imgErrors = saveUploadedImages($imgFolderPath, $imgFolder, $htmlFormImgFieldName, $maxImgWeightInMb, $product_id);
+        $imgErrors = saveUploadedImages($imgFolderPath, $imgFolder, $htmlFormImgFieldName, $maxImgWeightInMb, $product_id);
 
-       if (!empty($imgErrors)) {
-           $error = implode("<br>", $imgErrors);
-       }
+        if (!empty($imgErrors)) {
+            $error = implode("<br>", $imgErrors);
+            setMSG($error);
+        }
     }
 
-    header("Location: /?p=personal_area&a=myProducts&error={$error}");
-    exit;
+    redirect('/?p=personal_area&a=myProducts');
 }
-
 
 
 
@@ -211,12 +153,12 @@ function saveUploadedImages($imgFolderPath, $imgFolder, $htmlFormFieldName, $max
     if (!empty($correctImages)) {
 
         foreach ($correctImages as $imgName) {
-           $sql = "INSERT INTO
+            $sql = "INSERT INTO
            products_images
                (product_id, img_name_info)
            VALUES
                ($product_id, '$imgName')";
-           mysqli_query(getLink(), $sql);
+            mysqli_query(getLink(), $sql);
         }
 
         $number_of_images = count($correctImages);
@@ -234,3 +176,77 @@ function saveUploadedImages($imgFolderPath, $imgFolder, $htmlFormFieldName, $max
 
     return $imgErrors;
 }
+
+
+
+function deleteProductAction() {
+   if (!isAdmin()) {
+        redirect('');
+        return;
+   }
+
+   $userId = getInt($_SESSION['user']['id']);
+
+   if ($userId == 0) {
+       redirect('/?p=login');
+       exit;
+   }
+
+   $productId = getId();
+   $row = getOneProduct($productId);
+
+   if (empty($row['product_name'])) {
+      setMSG("В базе нет товара с id = " . $productId);
+      redirect('/?p=personal_area&a=myProducts');
+      return;
+   }
+
+   // на случай если несколько админов..
+   // но можно убрать эту проверку.
+   if ($userId != $row['user_id']) {
+      setMSG("У вас нет прав на удаление товара с id = " . $productId);
+      redirect('/?p=personal_area&a=myProducts');
+      return;
+   }
+
+   if (!empty($row['number_of_images'])) {
+       $imgPath = '.';
+       $imgFolder = $row['img_folder'];
+       deleteProductImages($productId, $imgPath, $imgFolder);
+   }
+
+   $sql = "DELETE FROM products WHERE id = " . $productId;
+   mysqli_query(getLink(), $sql);
+
+   $_SESSION['user']['number_of_products'] = setUserNumberOfProducts($userId);
+
+   redirect('/?p=personal_area&a=myProducts');
+}
+
+
+function deleteProductImages($productId, $imgPath, $imgFolder) {
+    $result = getProductImages($productId);
+    $deleteError = '';
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $pictureFile = "{$imgPath}/{$imgFolder}/{$row['img_name_info']}";
+        if (!is_file($pictureFile)) {
+            setMSG("Не удалось найти фото товара " . $pictureFile . ". Удаление отменено.");
+            redirect('/?p=personal_area&a=myProducts');
+            exit();
+        }
+        if (!unlink($pictureFile)) {
+            $deleteError .= "Не удалось удалить фото товара " . $pictureFile . "<br>";
+        }
+    }
+
+    if (!empty($deleteError)) {
+        setMSG($deleteError);
+    }
+
+    $sql = "DELETE FROM products_images WHERE product_id = " . $productId;
+    mysqli_query(getLink(), $sql);
+}
+
+
+
