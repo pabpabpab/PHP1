@@ -1,6 +1,5 @@
 <?php
-function indexAction()
-{
+function indexAction() {
    $error = '';
    if (empty($_POST['name'])) {
       $error .= 'Не указано имя.<br>';
@@ -15,24 +14,23 @@ function indexAction()
       $error .= 'Не указано подтверждение пароля.<br>';
    }
    if (!empty($error)) {
-      header("Location: /?p=registration&error={$error}");
-      exit;
+      setMSG($error);
+      redirect('/?p=registration');
+      return;
    }
 
    if ($_POST['password'] !== $_POST['password2']) {
-      $error = 'Пароль подтвержден неверно.';
-      header("Location: /?p=registration&error={$error}");
-      exit;
+      setMSG('Пароль подтвержден неверно.');
+      redirect('/?p=registration');
+      return;
    }
 
    $hashPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
    if ($hashPassword === false) {
-      $error = 'Не удалось сохранить пароль.';
-      header("Location: /?p=registration&error={$error}");
-      exit;
+      setMSG('Не удалось сохранить пароль.');
+      redirect('/?p=registration');
+      return;
    }
-
-   include_once dirname(__DIR__) . '/engine/valid_data_functions.php';
 
    $name = stripInjection($_POST['name']);
 
@@ -48,16 +46,17 @@ function indexAction()
 
 
     if ($userId == 0) {
-       $error = 'Не удалось создать регистрацию.';
-       header("Location: /?p=registration&error={$error}");
-       exit;
+       setMSG('Не удалось создать регистрацию.');
+       redirect('/?p=registration');
+       return;
     }
 
     $_SESSION['user']['authorized'] = true;
     $_SESSION['user']['id'] = $userId;
     $_SESSION['user']['name'] = $name;
-    $_SESSION['user']['is_amin'] = 0;
+    $_SESSION['user']['is_admin'] = 0;
     $_SESSION['user']['number_of_products'] = 0;
+    $_SESSION['user']['orders_count'] = 0;
 
 
     // Пока так
@@ -65,8 +64,7 @@ function indexAction()
     $message = 'На ваш e-mail создана регистрация на сайте ' . $_SERVER['SERVER_NAME'];
     mail($userEmail, $subject, $message);
 
-    header("Location: /?p=personal_area");
-    exit;
+    redirect('/?p=personal_area');
 }
 
 

@@ -18,9 +18,10 @@
 .menu_li__personal_area {
 	position: relative;
 }
-.menu__private_name {
+.menu__private_name_link {
    font-size: 20px;
    color: #0090c0;
+   text-decoration: none;
    position: absolute;
    top: -20px;
    right: -50px;
@@ -47,9 +48,11 @@
 }
 .private_column_left {
 	padding: 0 100px 0 0;
+	width: 250px;
 }
 .private_column_right {
 	padding: 0;
+	width: 100%;
 }
 
 h1 {
@@ -60,7 +63,6 @@ h2 {
 	margin: 10px 0 20px 0;
 	font-size: 25px;
 }
-
 
 
 
@@ -88,7 +90,6 @@ h2 {
 	padding: 10px;
 	margin: 30px 0;
 }
-
 
 
 
@@ -124,7 +125,7 @@ h2 {
 
 
 .small_img {
-	width: 200px;
+	height: 150px;
 	margin: 10px;
 }
 .big_img {
@@ -139,16 +140,11 @@ h2 {
 	font-size: 25px;
 	padding: 20px 35px;
 	margin: 35px 0;
-	background-color: #ccc;
-	color: #000;
+	background-color: #555;
+	color: #fff;
 	text-decoration: none;
 	font-weight: bold;
 }
-
-
-
-
-
 
 
 
@@ -174,6 +170,17 @@ h2 {
 	font-size: 10px;
 	color: #000;
 }
+.catalog__addtocart_link {
+	display: inline-block;
+	width: 150px;
+	font-size: 12px;
+	padding: 7px;
+	margin: 10px;
+	background-color: #333;
+	color: #fff;
+	text-decoration: none;
+}
+
 
 
 .cart {
@@ -203,9 +210,25 @@ h2 {
 	padding: 15px 25px;
 	cursor: pointer;
 }
+.order_submit {
+	font-size: 20px;
+	padding: 15px 25px;
+	cursor: pointer;
+	color: #fff;
+	background-color: #333;
+}
 .totalPrice {
 	text-align: right;
 	font-size: 25px;
-	padding: 0 10px 30px 0;
-	width: 90%;
+	padding: 10px 15px;
+}
+
+.cart_bottom {
+	display: flex;
+	justify-content: space-between;
+	padding: 10px 15px;
+}
+
+.w70p {
+	width: 70%;
 }

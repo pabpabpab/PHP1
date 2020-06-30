@@ -1,23 +1,19 @@
 <?php
-function indexAction()
-{
+function indexAction() {
     $row = getOneProduct(getId());
     $imagesResult = getProductImages(getId());
     $commentsResult = getProductComments(getId());
 
-
-    if ($_SESSION['user']['id'] > 0 && $_SESSION['user']['id'] != $row['user_id']) {
-       $sql = "UPDATE products SET view_number = view_number + 1 WHERE id = " . $getId();
+    if (!isAdmin()) {
+       $sql = "UPDATE products SET view_number = view_number + 1 WHERE id = " . getId();
        mysqli_query(getLink(), $sql);
     }
-
 
     $singleProductHtml = renderTmpl('tsingle_product.php', [
        'row' => $row,
        'imagesResult' => $imagesResult,
        'commentsResult' => $commentsResult
     ]);
-
 
     echo render('tgeneral.php', [
         'title' => $row['product_name'],
@@ -27,10 +23,7 @@ function indexAction()
 }
 
 
-
-
-function showBigImgAction()
-{
+function showBigImgAction() {
     $productId = getId('product_id');
     $imgId = getId('img_id');
 
@@ -52,25 +45,20 @@ function showBigImgAction()
 }
 
 
-
-
 function addcommentAction() {
     $productId = getId('product_id');
 
     if (empty($productId)) {
-       header("Location: /?p=catalog");
-       exit;
+       redirect('/?p=catalog');
+       return;
     }
 
-    $error = '';
     if (empty($_POST['comment'])) {
-       $error = 'Не указан комментарий.<br>';
-       header("Location: /?p=single_product&id={$productId}&error={$error}");
-       exit;
+       setMSG('Не указан комментарий.');
+       redirect("/?p=single_product&id={$productId}");
+       return;
     }
 
-
-    include_once dirname(__DIR__) . '/engine/valid_data_functions.php';
     $comment = stripInjection($_POST['comment']);
 
     $sql = "INSERT INTO products_comments (product_id, text) VALUES ($productId, '$comment')";
@@ -78,14 +66,13 @@ function addcommentAction() {
     $comment_id = mysqli_insert_id(getLink());
 
     if (empty($comment_id)) {
-       $error = 'Комментарий не добавился.';
-       header("Location: /?p=single_product&id={$productId}&error={$error}");
-       exit;
+       setMSG('Комментарий не добавился.');
+       redirect("/?p=single_product&id={$productId}");
+       return;
     }
 
     $sql = "UPDATE products SET number_of_comments = number_of_comments + 1 WHERE id = " . $productId;
     mysqli_query(getLink(), $sql);
 
-    header("Location: /?p=single_product&id={$productId}#comments");
-    exit;
+    redirect("/?p=single_product&id={$productId}");
 }

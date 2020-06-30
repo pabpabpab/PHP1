@@ -4,10 +4,10 @@
 		<?= $privateMenu ?>
 	</div>
 	<div class='private_column_right'>
-		<?php if (!empty($error)): ?>
-          <div class='error'><?= $error ?></div>
+		<?php if (!empty($msg)): ?>
+          <div class='error'><?= $msg ?></div>
         <?php endif; ?>
-		<?= $privatePage ?>
+		<?= $privateContent ?>
 	</div>
 </div>
 

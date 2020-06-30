@@ -61,7 +61,7 @@ function myMultipleUpload($uploadDirPath, $uploadDir, $userFile, $maxUploadSizeM
         }
 
 
-        $imgName = uniqid($prefix . '_') . "." . $fileExtension;
+        $imgName = uniqid($prefix . '_') . $i . "." . $fileExtension;
         $destination = $uploadDirPath . $uploadDir . "/" . $imgName;
 
         if (!move_uploaded_file($_FILES[$userFile]['tmp_name'][$i], $destination)) {

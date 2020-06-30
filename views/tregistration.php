@@ -1,6 +1,6 @@
 <h1><?= $h1 ?></h1>
-<?php if (!empty($error)): ?>
-<div class='error'><?= $error ?></div>
+<?php if (!empty($msg)): ?>
+  <div class='error'><?= $msg ?></div>
 <?php endif; ?>
 <form method='post' action='?p=adduser'>
    <input type='text' placeholder='Ваше имя' name='name' class='field'><br><br>

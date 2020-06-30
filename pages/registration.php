@@ -1,14 +1,8 @@
 <?php
-function indexAction()
-{
-    $error = '';
-    if (!empty($_GET['error'])) {
-    	$error = $_GET['error'];
-    }
-
+function indexAction() {
     echo render('tregistration.php', [
         'title' => 'Регистрация на сайте какого-то магазина',
         'h1' => 'Регистрация',
-        'error' => $error,
+        'msg' => getMSG(),
     ]);
 }

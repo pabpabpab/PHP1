@@ -1,6 +1,5 @@
 <?php
-function indexAction()
-{
+function indexAction() {
     $result = getProducts();
 
     $productsHtml = renderTmpl('tproducts.php', [
